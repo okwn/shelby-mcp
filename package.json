@@ -1,0 +1,50 @@
+{
+  "name": "shelby-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first Shelby MCP server with a production-minded layered architecture.",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "setup": "tsx scripts/setup.ts",
+    "dev": "tsx apps/server-stdio/src/index.ts",
+    "dev:mock": "tsx scripts/dev-mock.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/apps/server-stdio/src/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
+    "clean": "node -e \"import('node:fs').then(fs => fs.rmSync('dist', { recursive: true, force: true }))\"",
+    "changeset": "changeset",
+    "release:version": "changeset version",
+    "release:publish": "changeset publish"
+  },
+  "dependencies": {
+    "@aptos-labs/ts-sdk": "^5.2.1",
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@shelby-protocol/sdk": "^0.2.4",
+    "dotenv": "^17.2.3",
+    "mime-types": "^3.0.1",
+    "pino": "^10.1.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.30.0",
+    "@eslint/js": "^10.0.1",
+    "@types/mime-types": "^3.0.1",
+    "@types/node": "^24.10.1",
+    "eslint": "^10.0.3",
+    "prettier": "^3.8.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.0",
+    "vitest": "^4.0.8"
+  }
+}
