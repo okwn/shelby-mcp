@@ -14,6 +14,42 @@ function mapLogLevel(level: LogEntry["level"]): "debug" | "info" | "warning" | "
   }
 }
 
+function looksLikeAbsolutePath(value: string): boolean {
+  return /^[A-Za-z]:[\\/]/.test(value) || value.startsWith("/") || value.startsWith("\\\\");
+}
+
+function sanitizeClientValue(value: unknown, depth = 0): unknown {
+  if (depth > 4) {
+    return "[Truncated]";
+  }
+
+  if (typeof value === "string") {
+    return looksLikeAbsolutePath(value) ? "[RedactedPath]" : value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeClientValue(entry, depth + 1));
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, sanitizeClientValue(entry, depth + 1)])
+    );
+  }
+
+  return value;
+}
+
+function sanitizeClientData(
+  data: Record<string, unknown> | undefined
+): Record<string, unknown> | undefined {
+  if (!data) {
+    return undefined;
+  }
+
+  return sanitizeClientValue(data) as Record<string, unknown>;
+}
+
 export class McpLogBridge implements LogSink {
   private server?: McpServer;
 
@@ -35,7 +71,7 @@ export class McpLogBridge implements LogSink {
       logger: entry.logger,
       data: {
         message: entry.message,
-        ...entry.data
+        ...sanitizeClientData(entry.data)
       }
     });
   }

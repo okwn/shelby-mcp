@@ -77,7 +77,7 @@ describe("setup bootstrap", () => {
     const result = await prepareLocalEnvironment(workspace);
     const summary = formatSetupSummary(result);
 
-    expect(summary).toContain("npm.cmd run dev:mock");
+    expect(summary).toContain("npm run dev:mock");
     expect(summary).toContain("shelby://system/sandbox");
     expect(summary).toContain("shelby://system/upload-policy");
   });
@@ -92,7 +92,7 @@ describe("setup bootstrap", () => {
 
     expect(packageJson.scripts.setup).toBeDefined();
     expect(packageJson.scripts["dev:mock"]).toBeDefined();
-    expect(readme).toContain("npm.cmd run setup");
-    expect(readme).toContain("npm.cmd run dev:mock");
+    expect(readme).toContain("npm run setup");
+    expect(readme).toContain("npm run dev:mock");
   });
 });

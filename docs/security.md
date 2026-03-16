@@ -81,6 +81,7 @@ The logger:
 - writes to `stderr`, not `stdout`, to avoid corrupting STDIO transport
 - redacts sensitive fields such as API keys, private keys, tokens, and authorization-like fields
 - only forwards selected warnings/errors to MCP clients
+- redacts absolute local paths from client-visible MCP logging notifications
 
 The server does not return raw stack traces to MCP tool callers.
 

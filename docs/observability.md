@@ -40,6 +40,7 @@ Behavior:
 - attaches once the MCP server is connected
 - maps internal log levels to MCP levels
 - forwards important warnings and errors to the client
+- redacts absolute local paths before sending client-visible log data
 - suppresses routine debug chatter unless explicitly marked for client visibility
 
 Level mapping:

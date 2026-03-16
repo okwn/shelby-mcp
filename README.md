@@ -1,98 +1,147 @@
 # shelby-mcp
 
-`shelby-mcp` is a production-minded, local-first MCP server for AI agents that need safe access to Shelby storage workflows.
+![Node 20+](https://img.shields.io/badge/node-20%2B-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/typescript-5.x-3178C6?logo=typescript&logoColor=white)
+![Transport](https://img.shields.io/badge/MCP-STDIO-00599C)
+![Status](https://img.shields.io/badge/status-experimental-F59E0B)
+![Safety](https://img.shields.io/badge/sandbox-safe%20by%20design-0F766E)
 
-It is built as a backend/tooling-first repository for the Shelby ecosystem, not a dashboard-first app. The current MVP is STDIO-first, fully usable with a strong local mock provider, and intentionally structured so HTTP transport, auth, media, and org-aware features can be added later without rewriting the core layers.
+**A local-first Shelby MCP server for AI agents that need safe, typed access to Shelby storage workflows.**
+
+`shelby-mcp` is a backend/tooling-first repository, not a dashboard-first app. It gives MCP-compatible clients a serious Shelby integration surface with a strict filesystem sandbox, a fully working mock provider, an honest real-provider path, and an architecture that is ready to grow into HTTP transport, auth, media, and multi-user features later.
+
+> **Publish status**
+>
+> Ready to publish publicly as an experimental repository.
+> Mock mode is mature and validated. Real provider mode is credible and implemented against the official Shelby SDK, but it is still experimental and not yet production-mature.
 
 ## Quick Start
 
-Fastest local path:
+Fastest path from clone to a working local MCP server:
 
-```powershell
-npm.cmd install
-npm.cmd run setup
-npm.cmd run dev:mock
+```bash
+npm install
+npm run setup
+npm run dev:mock
 ```
 
-What that does:
+What this gives you:
 
-- creates `.env` from `.env.example` only if it does not already exist
-- prepares `SHELBY_WORKDIR`, local mock storage, and temp directories
-- starts the STDIO MCP server with `SHELBY_PROVIDER=mock`
+- a `.env` file copied from `.env.example` only if you do not already have one
+- a prepared `SHELBY_WORKDIR` sandbox
+- initialized mock storage and temp directories
+- a running STDIO MCP server backed by the mock provider
 
-After startup, inspect:
+First things to inspect from your MCP client:
 
-- `shelby://system/sandbox`
-- `shelby://system/upload-policy`
+- `shelby_healthcheck`
+- `shelby_get_safe_path_status`
+- `shelby_get_upload_policy`
 - `shelby://system/capabilities`
+- `shelby://system/sandbox`
+
+## What This Is
+
+`shelby-mcp` exposes Shelby storage workflows through MCP tools, resources, and prompts so AI agents can:
+
+- inspect provider/account state
+- inspect active sandbox and upload policy
+- upload files, text, and JSON
+- list blobs and fetch metadata
+- download blobs safely to local paths
+- read text blobs with truncation
+- verify blobs against local files
+
+The repository is intentionally local-first:
+
+- **Transport today:** STDIO
+- **Primary runtime today:** mock provider
+- **Extension path later:** HTTP/Streamable HTTP, auth/session, dashboard, media, org/team support
 
 ## Why This Exists
 
-AI agents need a serious Shelby integration surface that is:
+Shelby needs a serious MCP-native integration surface that is:
 
-- safe to run locally
-- honest about real versus mocked behavior
-- structured for MCP-native tool use
-- credible enough to upstream into a Shelby-adjacent organization repository
+- safe enough to run locally around real files
+- honest about mock vs real behavior
+- easy for agents to understand without guesswork
+- credible as a Shelby-adjacent developer tool
 
-This repository provides that foundation with a strict filesystem sandbox, typed tool contracts, MCP resources/prompts, and a real-provider strategy built around the official Shelby TypeScript SDK.
+This repository exists to provide that foundation without collapsing transport, policy, provider logic, and filesystem access into one fragile server file.
 
-## Why This Is Different
+## Why This Repo Feels Different
 
-The repository is not just a thin MCP wrapper around storage calls.
+- **Strict sandbox by default:** every file path is scoped to `SHELBY_WORKDIR`, and the active scope can only narrow further.
+- **Useful `shelby://system/*` resources:** agents can inspect capabilities, sandbox state, workflows, and upload policy before mutating anything.
+- **Mock and real provider strategy:** local development is real and fully usable, while the real provider is explicit about what is and is not fully mature.
+- **MCP-native design:** tools, resources, prompts, and client-visible logging are first-class features.
+- **Future-ready layering:** STDIO is the supported runtime today, but the core business logic is not tied to a single transport.
 
-- Strict path guard model: all local file operations stay confined to `SHELBY_WORKDIR`, and agents can only narrow scope further with `shelby_set_safe_path`.
-- Meaningful `shelby://system/*` resources: clients can inspect capabilities, upload policy, sandbox state, and recommended workflows before mutating anything.
-- Mock plus real provider strategy: local-first development is fully functional, while the real provider remains honest about capability gaps and SDK-boundary fallbacks.
-- Future-ready layering: STDIO is the supported runtime now, but transport, policy, provider, and sandbox concerns are already separated for later HTTP work.
+## Key Features
 
-## MVP Scope
+- Fully working STDIO MCP server using the official MCP TypeScript SDK
+- Strict `SHELBY_WORKDIR` sandbox with active safe-path narrowing
+- Fully usable mock provider with local on-disk blob storage and SHA-256 checksums
+- Real Shelby provider wired to `@shelby-protocol/sdk`
+- Stream-aware file upload path with real streaming in mock mode
+- Strict metadata mode for governed upload workflows
+- Optional privacy-aware telemetry, disabled by default
+- Structured logging to `stderr` plus MCP logging notifications
+- 18 tools, 6 resources, and 5 prompts
+- One-command setup and fast `dev:mock` onboarding
 
-The current MVP includes:
+## How It Works
 
-- a fully working STDIO MCP server
-- a layered monorepo-style architecture
-- a strict `SHELBY_WORKDIR` filesystem sandbox with narrowing safe-scope support
-- streaming file uploads in the mock provider and stream-aware upload adapters in the real provider path
-- a fully working `MockShelbyProvider` for local development and CI
-- a first-class `RealShelbyProvider` that uses [`@shelby-protocol/sdk`](https://www.npmjs.com/package/@shelby-protocol/sdk) where supported
-- strict metadata mode for governed upload workflows
-- opt-in anonymous error telemetry with privacy-preserving sanitization
-- 18 MCP tools for account, sandbox, upload policy, blob, upload, download, verification, and deletion workflows
-- dynamic MCP resources and prompts that help agents understand safe operating sequences
-- structured terminal logging via Pino plus MCP logging notifications for important operational events
-- CI, ESLint, Prettier, Vitest, and Changesets scaffolding for upstream-ready repository quality
-
-## Features
-
-- Local-first mock Shelby storage with on-disk metadata index and SHA-256 checksums
-- Official Shelby SDK integration path for real network operations
-- Stream-based file upload handling to reduce core memory pressure
-- Strict path normalization, root scoping, and safe-path narrowing
-- Strict metadata policy enforcement for uploads when enabled
-- Strongly typed, JSON-friendly tool responses
-- Destructive tool gating via `ALLOW_DESTRUCTIVE_TOOLS`
-- Tool/resource/prompt registration isolated from transport concerns
-- MCP logging bridge for client-visible warnings and errors
-- Optional privacy-aware telemetry for failure patterns
-
-## Architecture
+At runtime, the STDIO server composes config, logger, telemetry, provider selection, and the Shelby service layer. MCP registration is isolated from the business logic, and all file-based operations pass through the sandbox before they ever reach provider code.
 
 ```mermaid
 flowchart TD
-  A["MCP Client / Claude / Cursor"] --> B["STDIO MCP Server"]
-  B --> C["MCP Core"]
-  C --> D["Shelby Service"]
-  C --> E["MCP Log Bridge"]
-  D --> F["Sandbox / Safe Path Layer"]
-  D --> G["Provider Interface"]
-  G --> H["MockShelbyProvider"]
-  G --> I["RealShelbyProvider"]
-  H --> J["Local Provider Storage"]
-  F --> K["SHELBY_WORKDIR"]
+  A["MCP Host<br/>Cursor / VS Code / Claude Code"] --> B["STDIO Transport"]
+  B --> C["MCP Core Server"]
+  C --> D["Tool Registry"]
+  C --> E["Resource Registry"]
+  C --> F["Prompt Registry"]
+  C --> G["MCP Log Bridge"]
+  D --> H["Shelby Service"]
+  E --> H
+  F --> H
+  H --> I["Sandbox / Safe Path Layer"]
+  H --> J["Upload Policy Layer"]
+  H --> K["Provider Interface"]
+  K --> L["MockShelbyProvider"]
+  K --> M["RealShelbyProvider"]
+  L --> N["Local Provider Storage"]
+  I --> O["SHELBY_WORKDIR"]
+  H --> P["Telemetry Client"]
+  G --> A
 ```
 
-Repository layout:
+Concrete upload request flow:
+
+```mermaid
+sequenceDiagram
+  participant Host as MCP Host
+  participant Core as MCP Core
+  participant Blob as BlobService
+  participant Sandbox as SandboxService
+  participant Policy as UploadPolicyService
+  participant Provider as ShelbyProvider
+
+  Host->>Core: shelby_upload_file
+  Core->>Blob: validated input
+  Blob->>Sandbox: resolveInputFile(path)
+  Sandbox-->>Blob: safe absolute path
+  Blob->>Policy: resolveMetadata(...)
+  Policy-->>Blob: allowed metadata
+  Blob->>Provider: uploadFileStream(...)
+  Provider-->>Blob: UploadResult
+  Blob-->>Core: { ok: true, data: ... }
+  Core-->>Host: structured tool response
+```
+
+## Architecture Summary
+
+Source layout:
 
 ```text
 apps/
@@ -119,334 +168,411 @@ packages/
     src/config/
     src/fs/
     src/logger/
+    src/telemetry/
     src/utils/
     src/validation/
-
-tests/
-  integration/
-  unit/
-
-docs/
-  architecture.md
-  tool-spec.md
-  resources-prompts.md
-  security.md
-  observability.md
-  roadmap.md
 ```
 
-Core implementation entrypoints:
+Important entrypoints:
 
 - [apps/server-stdio/src/index.ts](apps/server-stdio/src/index.ts)
 - [packages/mcp-core/src/server.ts](packages/mcp-core/src/server.ts)
+- [packages/mcp-core/src/tool-registry.ts](packages/mcp-core/src/tool-registry.ts)
 - [packages/shelby-service/src/index.ts](packages/shelby-service/src/index.ts)
+- [packages/shelby-service/src/sandbox/sandbox-service.ts](packages/shelby-service/src/sandbox/sandbox-service.ts)
 - [packages/shelby-service/src/provider/mock-provider.ts](packages/shelby-service/src/provider/mock-provider.ts)
 - [packages/shelby-service/src/provider/real-provider.ts](packages/shelby-service/src/provider/real-provider.ts)
 
-More detail is in [docs/architecture.md](docs/architecture.md).
+More detail: [docs/architecture.md](docs/architecture.md)
 
-## Security And Sandbox Model
+## Security And Sandbox Highlights
 
-All agent-visible filesystem operations are confined to `SHELBY_WORKDIR`.
+This repository is not secure because it is “local.” It is secure because the implementation treats filesystem access as a first-class boundary.
 
-The sandbox layer enforces:
+Security properties in the current implementation:
 
-- root confinement to `SHELBY_WORKDIR`
-- active safe-scope narrowing via `shelby_set_safe_path`
-- no widening beyond the configured root at runtime
-- symlink escape rejection via real-path validation
-- blocking access to internal provider/temp directories reserved for server internals
+- every agent-visible file path is confined to `SHELBY_WORKDIR`
+- the active safe path can be narrowed with `shelby_set_safe_path`
+- the active scope cannot widen during runtime
+- path traversal outside the root is rejected
+- symlink escapes are rejected with real-path validation
+- provider storage and temp internals are blocked from direct agent access
+- destructive deletion is disabled unless `ALLOW_DESTRUCTIVE_TOOLS=true`
+- strict metadata mode rejects uploads before the provider starts work
+- telemetry is opt-in and sanitizes paths, metadata, and secrets
+- client-visible log notifications redact absolute local paths
+- logs go to `stderr`, not `stdout`, so STDIO protocol traffic is not corrupted
 
-This means agents cannot use tool paths to read or write arbitrary machine paths outside the configured workspace root.
+Why the sandbox matters:
 
-The relevant runtime surfaces are:
+- it reduces accidental data exposure to the model
+- it prevents uploads/downloads from reaching arbitrary machine paths
+- it gives users a way to intentionally narrow the blast radius of a session
 
-- [packages/shelby-service/src/sandbox/sandbox-service.ts](packages/shelby-service/src/sandbox/sandbox-service.ts)
-- [packages/mcp-core/src/tools/sandbox-tools.ts](packages/mcp-core/src/tools/sandbox-tools.ts)
-
-More detail is in [docs/security.md](docs/security.md).
+More detail: [docs/security.md](docs/security.md)
 
 ## Mock Vs Real Provider
 
+| Provider | Status       | What it is good for                                | Important limits                                                                         |
+| -------- | ------------ | -------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `mock`   | Ready today  | local development, CI, tool validation, onboarding | local filesystem only, no real network semantics                                         |
+| `real`   | Experimental | testing real Shelby list/upload/download flows     | uploads still buffer at the SDK boundary, no live CI coverage, not yet production-mature |
+
 ### Mock provider
 
-`SHELBY_PROVIDER=mock` is the default and the primary local-development path. It:
+`SHELBY_PROVIDER=mock` is the recommended first run.
 
-- stores blobs in `SHELBY_STORAGE_DIR`
-- persists an index on disk
+It:
+
+- stores blobs in local provider storage under `SHELBY_STORAGE_DIR`
+- maintains a metadata index on disk
 - computes SHA-256 checksums
-- streams file uploads directly into local provider storage with cleanup on partial failure
-- supports list, metadata, upload, text upload, JSON upload, download, text reads, mock URLs, batch upload, verify, and delete
-- behaves deterministically enough for unit and integration tests
+- supports list, metadata, upload, batch upload, download, read text, verify, and delete
+- implements true stream-based file uploads
+- is deterministic enough for tests
 
 ### Real provider
 
-`SHELBY_PROVIDER=real` is a real integration strategy, not a fake stub. It uses the official Shelby SDK and implements actual Shelby operations where the SDK contract is clear:
+`SHELBY_PROVIDER=real` is not a fake stub. It uses the official Shelby SDK and supports real Shelby operations where the SDK contract is clear.
+
+What is implemented:
 
 - list blobs
-- fetch metadata
-- upload
-- batch upload
+- get metadata
+- upload and batch upload
 - download
 - read text
 - verify by checksum comparison
-- delete, when signer configuration is present
+- delete when signer credentials are configured
 - derive direct retrieval URLs
 
-The real provider also accepts the new streaming upload interface, but it currently falls back to adapter-level buffering because the upstream Shelby SDK upload calls still expect in-memory blob payloads. That fallback is reported honestly through capability flags and runtime logs.
+What is still experimental:
 
-Write operations require:
+- streaming uploads are accepted through the provider interface, but the current SDK adapter still buffers before submission
+- batch upload failure reporting is less granular than the mock provider path
+- no live-network integration tests run in CI yet
 
-- `SHELBY_PRIVATE_KEY`
-- `SHELBY_ACCOUNT_ID`
-- a valid Shelby network in `SHELBY_NETWORK`
+## Quick Start In More Detail
 
-If configuration or network support is incomplete, the provider reports degraded health and capability-gated errors rather than pretending the operation succeeded.
+### 1. Install
 
-## Installation
-
-Requirements:
-
-- Node.js 20+
-- npm 11+ recommended
-
-Install dependencies:
-
-```powershell
-npm.cmd install
+```bash
+npm install
 ```
 
-Bootstrap local defaults safely:
+### 2. Prepare local defaults
 
-```powershell
-npm.cmd run setup
+```bash
+npm run setup
+```
+
+### 3. Start the mock-backed server
+
+```bash
+npm run dev:mock
+```
+
+### 4. Or build and run the compiled server
+
+```bash
+npm run build
+npm run start
 ```
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and adjust as needed.
+Copy `.env.example` to `.env` or let `npm run setup` create `.env` for you.
 
-| Variable                         | Required | Default                  | Notes                                                                                 |
-| -------------------------------- | -------- | ------------------------ | ------------------------------------------------------------------------------------- |
-| `NODE_ENV`                       | no       | `development`            | `development`, `test`, `production`                                                   |
-| `LOG_LEVEL`                      | no       | `info`                   | Pino log level                                                                        |
-| `SHELBY_PROVIDER`                | no       | `mock`                   | `mock` or `real`                                                                      |
-| `SHELBY_WORKDIR`                 | no       | `.shelby-workdir`        | Sandbox root for all agent-visible filesystem operations                              |
-| `SHELBY_STORAGE_DIR`             | no       | `.shelby-system/storage` | Internal provider storage directory, resolved inside `SHELBY_WORKDIR`                 |
-| `TEMP_DIR`                       | no       | `.shelby-system/tmp`     | Internal temp/download staging directory, resolved inside `SHELBY_WORKDIR`            |
-| `SHELBY_NETWORK`                 | no       | `local`                  | Real-provider network; expected Shelby values include `local`, `testnet`, `shelbynet` |
-| `SHELBY_ACCOUNT_ID`              | no       | `demo-account`           | Active account context                                                                |
-| `SHELBY_API_URL`                 | no       | empty                    | Optional Shelby RPC override                                                          |
-| `SHELBY_API_KEY`                 | no       | empty                    | Optional Shelby RPC API key                                                           |
-| `SHELBY_PRIVATE_KEY`             | no       | empty                    | Required for real-provider write operations                                           |
-| `MAX_UPLOAD_SIZE_MB`             | no       | `50`                     | Upload guardrail for file/text/JSON flows                                             |
-| `MAX_READ_TEXT_BYTES`            | no       | `65536`                  | Safe truncation limit for `shelby_read_blob_text`                                     |
-| `STREAM_UPLOAD_CHUNK_SIZE_BYTES` | no       | `262144`                 | Stream read chunk size for file uploads                                               |
-| `SHELBY_STRICT_METADATA`         | no       | `false`                  | Reject uploads missing required metadata keys                                         |
-| `SHELBY_REQUIRED_METADATA_KEYS`  | no       | empty                    | Comma-separated metadata keys required when strict mode is enabled                    |
-| `SHELBY_DEFAULT_CONTENT_OWNER`   | no       | empty                    | Default metadata value applied in non-strict mode                                     |
-| `SHELBY_DEFAULT_CLASSIFICATION`  | no       | empty                    | Default metadata value applied in non-strict mode                                     |
-| `SHELBY_DEFAULT_SOURCE`          | no       | empty                    | Default metadata value applied in non-strict mode                                     |
-| `TELEMETRY_ENABLED`              | no       | `false`                  | Opt-in anonymous error telemetry                                                      |
-| `TELEMETRY_ENDPOINT`             | no       | empty                    | HTTPS endpoint for telemetry delivery                                                 |
-| `TELEMETRY_ENVIRONMENT`          | no       | `development`            | Environment label sent with telemetry events                                          |
-| `TELEMETRY_SAMPLE_RATE`          | no       | `1`                      | Sampling rate between `0` and `1`                                                     |
-| `ALLOW_DESTRUCTIVE_TOOLS`        | no       | `false`                  | Must be `true` to enable delete                                                       |
+| Variable                         | Default                  | Purpose                                             |
+| -------------------------------- | ------------------------ | --------------------------------------------------- |
+| `SHELBY_PROVIDER`                | `mock`                   | provider mode: `mock` or `real`                     |
+| `SHELBY_WORKDIR`                 | `.shelby-workdir`        | sandbox root                                        |
+| `SHELBY_STORAGE_DIR`             | `.shelby-system/storage` | internal storage path inside the sandbox root       |
+| `TEMP_DIR`                       | `.shelby-system/tmp`     | internal temp/download path inside the sandbox root |
+| `MAX_UPLOAD_SIZE_MB`             | `50`                     | upload size guardrail                               |
+| `MAX_READ_TEXT_BYTES`            | `65536`                  | text-read truncation limit                          |
+| `STREAM_UPLOAD_CHUNK_SIZE_BYTES` | `262144`                 | chunk size for stream-aware uploads                 |
+| `SHELBY_STRICT_METADATA`         | `false`                  | enable strict upload metadata enforcement           |
+| `SHELBY_REQUIRED_METADATA_KEYS`  | empty                    | comma-separated required metadata keys              |
+| `SHELBY_DEFAULT_CONTENT_OWNER`   | empty                    | default metadata in non-strict mode                 |
+| `SHELBY_DEFAULT_CLASSIFICATION`  | empty                    | default metadata in non-strict mode                 |
+| `SHELBY_DEFAULT_SOURCE`          | empty                    | default metadata in non-strict mode                 |
+| `TELEMETRY_ENABLED`              | `false`                  | opt-in anonymous telemetry                          |
+| `TELEMETRY_ENDPOINT`             | empty                    | telemetry destination                               |
+| `TELEMETRY_ENVIRONMENT`          | `development`            | telemetry environment label                         |
+| `TELEMETRY_SAMPLE_RATE`          | `1`                      | telemetry sampling ratio                            |
+| `ALLOW_DESTRUCTIVE_TOOLS`        | `false`                  | gate destructive operations                         |
+| `SHELBY_NETWORK`                 | `local`                  | real-provider network                               |
+| `SHELBY_ACCOUNT_ID`              | `demo-account`           | account context                                     |
+| `SHELBY_API_URL`                 | empty                    | optional Shelby RPC override                        |
+| `SHELBY_API_KEY`                 | empty                    | optional API key                                    |
+| `SHELBY_PRIVATE_KEY`             | empty                    | required for real-provider writes                   |
 
-## Running Locally
+## Cursor Integration
 
-Development server:
+Cursor is a strong fit for `shelby-mcp` because this server is a **local STDIO MCP server**.
 
-```powershell
-npm.cmd run dev
+Why STDIO matters:
+
+- Cursor starts the server as a local child process
+- tool calls and structured responses travel over the MCP protocol on `stdout`
+- server logs must stay on `stderr` so protocol traffic remains clean
+- mock mode is the easiest way to validate the integration without any real Shelby credentials
+
+Cursor configuration locations according to the current Cursor MCP docs:
+
+- project config: `.cursor/mcp.json`
+- global config: `~/.cursor/mcp.json`
+
+Recommended flow:
+
+```bash
+npm install
+npm run setup
+npm run build
 ```
 
-Mock-first development server with safe defaults:
-
-```powershell
-npm.cmd run dev:mock
-```
-
-Typecheck:
-
-```powershell
-npm.cmd run typecheck
-```
-
-Lint:
-
-```powershell
-npm.cmd run lint
-```
-
-Build:
-
-```powershell
-npm.cmd run build
-```
-
-Run the built STDIO server:
-
-```powershell
-npm.cmd run start
-```
-
-Run tests:
-
-```powershell
-npm.cmd test
-```
-
-Run the full repo-quality check locally:
-
-```powershell
-npm.cmd run check
-```
-
-## Connecting From An MCP Client
-
-Build the project first, then point the client at the compiled STDIO entrypoint.
-
-Example JSON config:
+Example `.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "shelby": {
+      "type": "stdio",
       "command": "node",
-      "args": ["dist/apps/server-stdio/src/index.js"],
-      "cwd": "C:\\Users\\Nida Bil\\Desktop\\shelby-mcp",
+      "args": ["/absolute/path/to/shelby-mcp/dist/apps/server-stdio/src/index.js"],
       "env": {
         "SHELBY_PROVIDER": "mock",
-        "SHELBY_WORKDIR": ".shelby-workdir",
-        "ALLOW_DESTRUCTIVE_TOOLS": "false"
+        "SHELBY_WORKDIR": "/absolute/path/to/your-project/.shelby-workdir",
+        "SHELBY_STORAGE_DIR": ".shelby-system/storage",
+        "TEMP_DIR": ".shelby-system/tmp",
+        "ALLOW_DESTRUCTIVE_TOOLS": "false",
+        "TELEMETRY_ENABLED": "false"
       }
     }
   }
 }
 ```
 
-For development-time TypeScript execution:
+What to test in Cursor:
+
+1. Restart Cursor or reload the project after editing `mcp.json`.
+2. Confirm the `shelby` server starts successfully.
+3. Ask Cursor:
+   - `Call shelby_healthcheck and summarize the active provider.`
+   - `Read shelby://system/sandbox and tell me the current safe scope.`
+   - `Show me the Shelby upload policy before uploading anything.`
+
+If Cursor can call `shelby_healthcheck`, see the `shelby_*` tools, and access the system resources, the integration is working.
+
+## VS Code Integration With `.vscode/mcp.json`
+
+VS Code now supports MCP server configuration through `mcp.json`. For a shared project setup, use `.vscode/mcp.json`.
+
+Build first:
+
+```bash
+npm install
+npm run setup
+npm run build
+```
+
+Example `.vscode/mcp.json`:
 
 ```json
 {
-  "mcpServers": {
-    "shelby-dev": {
-      "command": "npm.cmd",
-      "args": ["run", "dev"],
-      "cwd": "C:\\Users\\Nida Bil\\Desktop\\shelby-mcp",
+  "servers": {
+    "shelby": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/dist/apps/server-stdio/src/index.js"],
       "env": {
-        "SHELBY_PROVIDER": "mock"
+        "SHELBY_PROVIDER": "mock",
+        "SHELBY_WORKDIR": "${workspaceFolder}/.shelby-workdir",
+        "SHELBY_STORAGE_DIR": ".shelby-system/storage",
+        "TEMP_DIR": ".shelby-system/tmp",
+        "ALLOW_DESTRUCTIVE_TOOLS": "false",
+        "TELEMETRY_ENABLED": "false"
       }
     }
   }
 }
 ```
 
+Notes:
+
+- This keeps the sandbox root inside the workspace clone.
+- The built entrypoint is used, which avoids requiring `tsx` inside VS Code.
+- VS Code can optionally apply its own MCP sandboxing on macOS and Linux, but `shelby-mcp` already enforces an internal path guard regardless of host support.
+
+How to validate in VS Code:
+
+1. Open the Chat view and confirm the MCP server is started.
+2. Run `MCP: List Servers` and verify that `shelby` is available.
+3. Use the chat tool picker or tool configuration UI to confirm `shelby_*` tools are discovered.
+4. Use `MCP: Browse Resources` to verify the `shelby://system/*` resources are available.
+5. Try:
+   - `Call shelby_healthcheck`
+   - `Call shelby_get_safe_path_status`
+   - `/shelby.onboard-account` if prompt discovery is enabled in your workflow
+
 ## Tool Catalog
 
-The current server exposes 18 tools:
+| Tool                                  | Purpose                                                 |
+| ------------------------------------- | ------------------------------------------------------- |
+| `shelby_healthcheck`                  | provider and config sanity check                        |
+| `shelby_capabilities`                 | machine-readable provider/runtime capabilities          |
+| `shelby_account_info`                 | active provider, account, network, and status           |
+| `shelby_get_upload_policy`            | upload limits, strict metadata state, streaming support |
+| `shelby_get_safe_path_status`         | current sandbox root and active scope                   |
+| `shelby_set_safe_path`                | narrow the active scope to a subdirectory               |
+| `shelby_list_local_upload_candidates` | inspect local files before upload                       |
+| `shelby_list_blobs`                   | list blobs                                              |
+| `shelby_get_blob_metadata`            | inspect a blob                                          |
+| `shelby_upload_file`                  | upload a local file                                     |
+| `shelby_upload_text`                  | upload inline text                                      |
+| `shelby_write_json`                   | serialize JSON and upload it                            |
+| `shelby_download_blob`                | download a blob to a safe local path                    |
+| `shelby_read_blob_text`               | read text safely with truncation                        |
+| `shelby_get_blob_url`                 | derive a retrieval URL                                  |
+| `shelby_batch_upload`                 | upload multiple files                                   |
+| `shelby_verify_blob`                  | compare checksums / integrity                           |
+| `shelby_delete_blob`                  | delete a blob when destructive tools are enabled        |
 
-1. `shelby_healthcheck`
-2. `shelby_capabilities`
-3. `shelby_account_info`
-4. `shelby_get_upload_policy`
-5. `shelby_get_safe_path_status`
-6. `shelby_set_safe_path`
-7. `shelby_list_local_upload_candidates`
-8. `shelby_list_blobs`
-9. `shelby_get_blob_metadata`
-10. `shelby_upload_file`
-11. `shelby_upload_text`
-12. `shelby_write_json`
-13. `shelby_download_blob`
-14. `shelby_read_blob_text`
-15. `shelby_get_blob_url`
-16. `shelby_batch_upload`
-17. `shelby_verify_blob`
-18. `shelby_delete_blob`
+Full definitions: [docs/tool-spec.md](docs/tool-spec.md)
 
-Detailed definitions are in [docs/tool-spec.md](docs/tool-spec.md).
+## Resource Catalog
 
-## Resources Catalog
+| Resource                        | Purpose                                                          |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `shelby://system/capabilities`  | provider mode, capabilities, transport, telemetry, upload policy |
+| `shelby://system/account`       | account info and provider health                                 |
+| `shelby://system/upload-policy` | strict metadata and upload constraints                           |
+| `shelby://system/sandbox`       | root path, active scope, restrictions                            |
+| `shelby://system/tools`         | machine-readable tool catalog                                    |
+| `shelby://system/workflows`     | recommended safe operation sequences                             |
 
-Dynamic MCP resources:
+More detail: [docs/resources-prompts.md](docs/resources-prompts.md)
 
-- `shelby://system/capabilities`
-- `shelby://system/account`
-- `shelby://system/upload-policy`
-- `shelby://system/sandbox`
-- `shelby://system/tools`
-- `shelby://system/workflows`
+## Prompt Catalog
 
-See [docs/resources-prompts.md](docs/resources-prompts.md).
+| Prompt                      | Purpose                                                          |
+| --------------------------- | ---------------------------------------------------------------- |
+| `onboard-account`           | inspect provider, capabilities, upload policy, and sandbox state |
+| `prepare-batch-upload`      | inspect a directory and plan a batch upload                      |
+| `safe-upload-file`          | safely upload one file and verify the result                     |
+| `inspect-and-read-blob`     | inspect metadata before reading blob text                        |
+| `verify-local-against-blob` | compare local and remote checksum state                          |
 
-## Prompts Catalog
+More detail: [docs/resources-prompts.md](docs/resources-prompts.md)
 
-Built-in MCP prompts:
+## Developer Scripts
 
-- `onboard-account`
-- `prepare-batch-upload`
-- `safe-upload-file`
-- `inspect-and-read-blob`
-- `verify-local-against-blob`
+| Script                 | What it does                                         |
+| ---------------------- | ---------------------------------------------------- |
+| `npm run setup`        | prepare `.env` and local directories                 |
+| `npm run dev`          | run the STDIO server directly from TypeScript source |
+| `npm run dev:mock`     | force mock mode and start with local-safe defaults   |
+| `npm run build`        | compile to `dist/`                                   |
+| `npm run start`        | run the compiled STDIO server                        |
+| `npm test`             | run the Vitest suite                                 |
+| `npm run lint`         | run ESLint                                           |
+| `npm run typecheck`    | run TypeScript without emit                          |
+| `npm run format:check` | verify Prettier formatting                           |
+| `npm run check`        | format check, lint, typecheck, test, and build       |
 
-See [docs/resources-prompts.md](docs/resources-prompts.md).
+## Publish Readiness Checklist
+
+Current public-publish checklist:
+
+- [x] Mock provider works locally
+- [x] `npm run setup` works
+- [x] `npm run dev:mock` works
+- [x] lint passes
+- [x] typecheck passes
+- [x] tests pass
+- [x] build passes
+- [x] README reflects the current implementation
+- [x] sandbox model is documented
+- [x] destructive tools are gated
+- [x] Cursor integration example exists
+- [x] VS Code `.vscode/mcp.json` example exists
+- [x] known limitations are documented
+- [x] real provider is clearly labeled experimental
+- [ ] live real-provider integration tests run in CI
+- [ ] real-provider streaming is end-to-end
+
+**Verdict:** ready to publish publicly as an experimental repository with noted limitations.
+
+That is a good fit for a personal GitHub release today. It is **not** the same as “ready for official Shelby upstreaming without caveats.”
+
+## Current Status And Limitations
+
+### Implemented now
+
+- local STDIO runtime
+- mock provider with real local workflows
+- strict sandbox / safe-path model
+- resources and prompts
+- strict metadata mode
+- telemetry toggle
+- stream-aware upload path
+- CI, lint, format, tests, setup scripts
+
+### Experimental today
+
+- real Shelby provider
+- real-provider write operations
+- telemetry in operator environments
+- public positioning beyond experimental maturity
+
+### Not yet implemented
+
+- HTTP / Streamable HTTP transport
+- dashboard/admin UI
+- auth/session model
+- wallet-aware user context
+- richer media pipeline
+- team/org support
+- signed URLs
 
 ## Observability
 
-The server logs to `stderr` using Pino and can also emit MCP logging messages to connected clients for important warnings and operational issues.
+The server emits structured Pino logs to `stderr` and can forward important warnings/errors to MCP clients through the logging bridge.
 
-Examples include:
+Examples:
 
-- startup status
-- provider initialization warnings
+- startup readiness
+- provider warnings
 - sandbox violations
-- strict metadata policy rejections
+- strict metadata denials
 - destructive-tool denials
 - real-provider failures
 
-Optional telemetry is disabled by default. When enabled, it reports coarse failure events and one startup capability snapshot without sending secrets, raw absolute paths, file contents, or raw metadata payloads.
+Telemetry is disabled by default. When enabled, it sends only coarse sanitized operational events. It does **not** send file contents, raw metadata, secrets, or raw absolute local paths.
 
-The logging bridge lives in [packages/mcp-core/src/logging/mcp-log-bridge.ts](packages/mcp-core/src/logging/mcp-log-bridge.ts). More detail is in [docs/observability.md](docs/observability.md).
-
-## Repo Standards
-
-This repository includes:
-
-- GitHub Actions CI in [.github/workflows/ci.yml](.github/workflows/ci.yml)
-- ESLint via [eslint.config.js](eslint.config.js)
-- Prettier via [.prettierrc](.prettierrc)
-- EditorConfig via [.editorconfig](.editorconfig)
-- Changesets via [.changeset/config.json](.changeset/config.json)
-
-Recommended commit format:
-
-- `feat: add signed-url capability reporting`
-- `fix: reject sandbox symlink escape`
-- `docs: expand real provider configuration`
+More detail: [docs/observability.md](docs/observability.md)
 
 ## Example Agent Prompts
 
 - `Inspect the Shelby environment and tell me what provider and safe path are active.`
-- `Show me the active Shelby upload policy before I upload anything.`
+- `Show me the current Shelby upload policy before I upload anything.`
 - `Narrow the safe path to ./notes and upload todo.md to Shelby.`
-- `If strict metadata mode is enabled, tell me which metadata keys I must provide.`
 - `List my Shelby blobs.`
 - `Download blob X into a safe downloads directory.`
-- `Read blob Y as text and tell me if the result was truncated.`
+- `Read blob Y as text and tell me if it was truncated.`
 - `Verify blob Z against ./documents/file.pdf.`
-- `Plan a batch upload from ./artifacts before actually uploading.`
+- `Plan a batch upload from ./artifacts before actually uploading anything.`
 
 ## Roadmap
 
-Planned future phases include:
+Planned future phases:
 
-- `apps/server-http` with Streamable HTTP transport
+- `apps/server-http` with HTTP / Streamable HTTP transport
 - auth and session-aware account context
 - wallet-aware user identity
-- media processing and richer file preparation
-- team and org support
+- media processing and richer preparation tools
+- team/org support
 - dashboard/admin UI
 
-See [docs/roadmap.md](docs/roadmap.md).
+Roadmap detail: [docs/roadmap.md](docs/roadmap.md)

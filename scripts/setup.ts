@@ -99,7 +99,7 @@ export function formatSetupSummary(result: SetupResult): string {
     `Temp: ${result.config.tempDir}`,
     "",
     "Next steps:",
-    "1. npm.cmd run dev:mock",
+    "1. npm run dev:mock",
     "2. Connect your MCP client to the running STDIO server",
     "3. Inspect shelby://system/sandbox and shelby://system/upload-policy"
   ].join("\n");
