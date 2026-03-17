@@ -1,6 +1,6 @@
-import path from "node:path";
 import { config as loadDotEnv } from "dotenv";
 import { z } from "zod";
+import { isPathInsideRoot, resolveUserPath } from "../fs/index.js";
 import { parseBoolean, parseCommaSeparatedList } from "../utils/index.js";
 
 loadDotEnv();
@@ -12,11 +12,6 @@ function emptyStringToUndefined(value: unknown): unknown {
 
   const trimmed = value.trim();
   return trimmed.length === 0 ? undefined : trimmed;
-}
-
-function isPathInsideRoot(rootPath: string, candidatePath: string): boolean {
-  const relative = path.relative(rootPath, candidatePath);
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
 const configSchema = z.object({
@@ -124,9 +119,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, cwd = process.c
 
   const requiredMetadataKeys = parseCommaSeparatedList(parsed.data.SHELBY_REQUIRED_METADATA_KEYS);
 
-  const shelbyWorkdir = path.resolve(cwd, parsed.data.SHELBY_WORKDIR);
-  const shelbyStorageDir = path.resolve(shelbyWorkdir, parsed.data.SHELBY_STORAGE_DIR);
-  const tempDir = path.resolve(shelbyWorkdir, parsed.data.TEMP_DIR);
+  const shelbyWorkdir = resolveUserPath(parsed.data.SHELBY_WORKDIR, cwd);
+  const shelbyStorageDir = resolveUserPath(parsed.data.SHELBY_STORAGE_DIR, shelbyWorkdir);
+  const tempDir = resolveUserPath(parsed.data.TEMP_DIR, shelbyWorkdir);
 
   const pathIssues: string[] = [];
   if (!isPathInsideRoot(shelbyWorkdir, shelbyStorageDir)) {

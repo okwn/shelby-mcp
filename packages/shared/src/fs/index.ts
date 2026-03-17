@@ -7,27 +7,106 @@ import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { lookup as lookupMimeType } from "mime-types";
 
+type PathFlavor = "posix" | "windows";
+
+export function isWindowsAbsolutePath(pathStr: string): boolean {
+  return /^[A-Za-z]:[\\/]/.test(pathStr) || /^\\\\[^\\]+\\[^\\]+/.test(pathStr);
+}
+
+export function isPosixAbsolutePath(pathStr: string): boolean {
+  return path.posix.isAbsolute(pathStr);
+}
+
+export function isAbsoluteUserPath(pathStr: string): boolean {
+  return isPosixAbsolutePath(pathStr) || isWindowsAbsolutePath(pathStr);
+}
+
+function detectPathFlavor(pathStr: string): PathFlavor | undefined {
+  if (isWindowsAbsolutePath(pathStr)) {
+    return "windows";
+  }
+  if (isPosixAbsolutePath(pathStr)) {
+    return "posix";
+  }
+  return undefined;
+}
+
+function getDefaultPathFlavor(): PathFlavor {
+  return path.sep === "\\" ? "windows" : "posix";
+}
+
+function getPathImplementation(flavor: PathFlavor) {
+  return flavor === "windows" ? path.win32 : path.posix;
+}
+
+function resolveForFlavor(inputPath: string, flavor: PathFlavor, cwd = process.cwd()): string {
+  const implementation = getPathImplementation(flavor);
+
+  if (flavor === "windows" && isWindowsAbsolutePath(inputPath)) {
+    return implementation.normalize(inputPath);
+  }
+
+  if (flavor === "posix" && isPosixAbsolutePath(inputPath)) {
+    return implementation.normalize(inputPath);
+  }
+
+  if (flavor === "windows" && isWindowsAbsolutePath(cwd)) {
+    return implementation.resolve(cwd, inputPath);
+  }
+
+  if (flavor === "posix" && isPosixAbsolutePath(cwd)) {
+    return implementation.resolve(cwd, inputPath);
+  }
+
+  return implementation.resolve(inputPath);
+}
+
+function getComparisonFlavor(rootDir: string, targetPath: string): PathFlavor | undefined {
+  const rootFlavor = detectPathFlavor(rootDir);
+  const targetFlavor = detectPathFlavor(targetPath);
+
+  if (rootFlavor && targetFlavor && rootFlavor !== targetFlavor) {
+    return undefined;
+  }
+
+  return rootFlavor ?? targetFlavor ?? getDefaultPathFlavor();
+}
+
 export async function ensureDir(directoryPath: string): Promise<void> {
   await fs.mkdir(directoryPath, { recursive: true });
 }
 
 export function resolveUserPath(inputPath: string, cwd = process.cwd()): string {
-  return path.resolve(cwd, inputPath);
+  const flavor = detectPathFlavor(inputPath) ?? detectPathFlavor(cwd) ?? getDefaultPathFlavor();
+  return resolveForFlavor(inputPath, flavor, cwd);
 }
 
 export function isPathInsideRoot(rootDir: string, targetPath: string): boolean {
-  const resolvedRoot = path.resolve(rootDir);
-  const resolvedTarget = path.resolve(targetPath);
-  const relative = path.relative(resolvedRoot, resolvedTarget);
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+  const flavor = getComparisonFlavor(rootDir, targetPath);
+  if (!flavor) {
+    return false;
+  }
+
+  const implementation = getPathImplementation(flavor);
+  const resolvedRoot = resolveForFlavor(rootDir, flavor);
+  const resolvedTarget = resolveForFlavor(targetPath, flavor);
+  const relative = implementation.relative(resolvedRoot, resolvedTarget);
+
+  return relative === "" || (!relative.startsWith("..") && !implementation.isAbsolute(relative));
 }
 
 export function assertPathInsideRoot(rootDir: string, targetPath: string, label = "path"): string {
-  const resolvedTarget = path.resolve(targetPath);
+  const flavor = getComparisonFlavor(rootDir, targetPath);
+  if (!flavor) {
+    throw new Error(`${label} must stay within ${resolveUserPath(rootDir)}`);
+  }
+
+  const resolvedRoot = resolveForFlavor(rootDir, flavor);
+  const resolvedTarget = resolveForFlavor(targetPath, flavor);
   if (isPathInsideRoot(rootDir, resolvedTarget)) {
     return resolvedTarget;
   }
-  throw new Error(`${label} must stay within ${path.resolve(rootDir)}`);
+  throw new Error(`${label} must stay within ${resolvedRoot}`);
 }
 
 export async function pathExists(targetPath: string): Promise<boolean> {

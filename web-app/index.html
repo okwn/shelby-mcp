@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>shelby-mcp | Local-first MCP server for Shelby</title>
+    <meta
+      name="description"
+      content="shelby-mcp is a local-first MCP server for Shelby with sandboxed file access, mock and real provider paths, and fast integration for Cursor and VS Code."
+    />
+    <meta name="theme-color" content="#090b10" />
+    <meta property="og:title" content="shelby-mcp" />
+    <meta
+      property="og:description"
+      content="Local-first MCP server for Shelby. Secure file access, mock/real provider support, and fast agent integration."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://shelby-mcp.okwn.cc" />
+    <link rel="canonical" href="https://shelby-mcp.okwn.cc" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="container nav-shell">
+        <a class="brand" href="#top" aria-label="shelby-mcp home">
+          <span class="brand-mark">SM</span>
+          <span class="brand-text">shelby-mcp</span>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary">
+          <a href="#why">Why</a>
+          <a href="#features">Features</a>
+          <a href="#quick-start">Quick Start</a>
+          <a href="#clients">Client Setup</a>
+          <a href="#status">Status</a>
+        </nav>
+
+        <a
+          class="button button-ghost nav-action"
+          href="https://github.com/okwn/shelby-mcp"
+          target="_blank"
+          rel="noreferrer"
+          >GitHub</a
+        >
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero" id="top">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Shelby / MCP / Local-first</p>
+            <h1>Local-first MCP server for Shelby.</h1>
+            <p class="hero-subtitle">
+              Secure file access, mock and real provider support, and fast agent integration for
+              Cursor and VS Code.
+            </p>
+            <p class="hero-description">
+              Built for AI agents that need structured Shelby workflows without unrestricted machine
+              access. `shelby-mcp` keeps file operations sandboxed, exposes MCP
+              tools/resources/prompts, and makes local testing easy before deeper Shelby
+              integration.
+            </p>
+
+            <div class="hero-actions">
+              <a
+                class="button button-primary"
+                href="https://github.com/okwn/shelby-mcp"
+                target="_blank"
+                rel="noreferrer"
+                >View on GitHub</a
+              >
+              <a class="button button-secondary" href="#quick-start">Quick Start</a>
+            </div>
+
+            <ul class="badge-row" aria-label="Project metadata">
+              <li>Experimental</li>
+              <li>Local-first</li>
+              <li>STDIO MCP</li>
+              <li>Cursor + VS Code</li>
+            </ul>
+
+            <dl class="hero-stats">
+              <div>
+                <dt>18</dt>
+                <dd>MCP tools</dd>
+              </div>
+              <div>
+                <dt>6</dt>
+                <dd>system resources</dd>
+              </div>
+              <div>
+                <dt>5</dt>
+                <dd>workflow prompts</dd>
+              </div>
+              <div>
+                <dt>2</dt>
+                <dd>provider paths</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="hero-side">
+            <div class="panel terminal-panel">
+              <div class="panel-top">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-amber"></span>
+                <span class="dot dot-green"></span>
+                <span class="panel-label">quick-start.sh</span>
+              </div>
+              <pre><code>$ npm install
+$ npm run setup
+$ npm run dev:mock</code></pre>
+              <div class="panel-note">
+                The shortest path into a mock-backed local MCP server with a prepared workdir and
+                safe defaults.
+              </div>
+            </div>
+
+            <div class="panel signal-panel">
+              <div class="signal-chip">
+                <span class="signal-title">Safe by design</span>
+                <span class="signal-text">Sandboxed file access and active safe-path scoping.</span>
+              </div>
+              <div class="signal-chip">
+                <span class="signal-title">Easy first run</span>
+                <span class="signal-text"
+                  >Mock provider is ready now. No live credentials needed.</span
+                >
+              </div>
+              <div class="signal-chip">
+                <span class="signal-title">Real path exists</span>
+                <span class="signal-text"
+                  >Official Shelby SDK adapter included, clearly labeled experimental.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="why">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-kicker">Why it exists</p>
+            <h2>Give AI agents Shelby access without giving them the entire machine.</h2>
+          </div>
+
+          <div class="why-grid">
+            <div class="panel prose-panel">
+              <p>
+                AI agents need a safe bridge into Shelby storage. Raw filesystem access is too wide,
+                and one-off wrappers are usually missing policy, sandboxing, and discoverable MCP
+                UX.
+              </p>
+              <p>
+                `shelby-mcp` provides a local-first MCP layer that keeps file access scoped,
+                validates uploads, exposes structured tools/resources/prompts, and stays usable in
+                mock mode long before live integration is required.
+              </p>
+            </div>
+
+            <div class="panel checklist-panel">
+              <h3>What it solves</h3>
+              <ul class="check-list">
+                <li>Safe and structured Shelby workflows for MCP hosts</li>
+                <li>Strict root scoping and safe-path narrowing for local file operations</li>
+                <li>Mock provider for rapid local testing and CI</li>
+                <li>Clear migration path toward deeper Shelby-native integration</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-kicker">Key features</p>
+            <h2>Serious tooling for local-first Shelby workflows.</h2>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature-card">
+              <h3>Sandboxed file access</h3>
+              <p>All file paths stay inside the configured workdir.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Safe path scoping</h3>
+              <p>Agents can narrow scope further without widening beyond the root.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Mock provider</h3>
+              <p>Easy local development with real uploads, downloads, and checksums.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Real provider path</h3>
+              <p>Official Shelby SDK adapter exists and is explicit about current limits.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Cursor integration</h3>
+              <p>STDIO MCP setup designed for a fast first run in Cursor.</p>
+            </article>
+            <article class="feature-card">
+              <h3>VS Code `mcp.json`</h3>
+              <p>Built entrypoint works cleanly with workspace MCP registration.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Resources + prompts</h3>
+              <p>Agents can inspect state and learn the intended workflow before acting.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Streaming uploads</h3>
+              <p>Core upload path avoids full buffering when the provider supports it.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Strict metadata mode</h3>
+              <p>Policy can reject uploads that do not include the required metadata.</p>
+            </article>
+            <article class="feature-card">
+              <h3>Telemetry toggle</h3>
+              <p>Opt-in only, privacy-aware, and disabled by default.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="how-it-works">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-kicker">How it works</p>
+            <h2>Agent input moves through a guarded runtime, not a loose file wrapper.</h2>
+          </div>
+
+          <div class="flow-grid" aria-label="Architecture flow">
+            <div class="flow-card">
+              <span class="flow-step">01</span>
+              <h3>Agent / Cursor / VS Code</h3>
+              <p>Any MCP-capable host discovers tools, resources, and prompts.</p>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">&rarr;</div>
+            <div class="flow-card">
+              <span class="flow-step">02</span>
+              <h3>MCP Server</h3>
+              <p>STDIO transport handles MCP registration and structured tool calls.</p>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">&rarr;</div>
+            <div class="flow-card">
+              <span class="flow-step">03</span>
+              <h3>Sandbox / Path Guard</h3>
+              <p>Local paths are normalized, scoped, and rejected if they escape the root.</p>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">&rarr;</div>
+            <div class="flow-card">
+              <span class="flow-step">04</span>
+              <h3>Shelby Service Layer</h3>
+              <p>Upload policy, metadata rules, and business logic stay transport-agnostic.</p>
+            </div>
+            <div class="flow-arrow" aria-hidden="true">&rarr;</div>
+            <div class="flow-card">
+              <span class="flow-step">05</span>
+              <h3>Mock or Real Provider</h3>
+              <p>Use the local provider first, then move to the experimental real path.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="quick-start">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-kicker">Quick start</p>
+            <h2>Three commands to a local mock-backed server.</h2>
+          </div>
+
+          <div class="quickstart-grid">
+            <div class="panel snippet-panel">
+              <div class="snippet-label">shell</div>
+              <pre><code>npm install
+npm run setup
+npm run dev:mock</code></pre>
+            </div>
+
+            <div class="panel quickstart-notes">
+              <h3>What happens next</h3>
+              <ul class="stack-list">
+                <li>`setup` creates `.env` only if it is missing.</li>
+                <li>`dev:mock` prepares a safe workdir and forces mock provider mode.</li>
+                <li>
+                  Build with `npm run build` before pointing Cursor or VS Code at the compiled
+                  server.
+                </li>
+                <li>Use mock mode first, then move to the experimental real provider path.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="clients">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-kicker">MCP client setup</p>
+            <h2>Built for local STDIO integration in real editor workflows.</h2>
+          </div>
+
+          <div class="client-grid">
+            <article class="panel client-card">
+              <div class="client-head">
+                <h3>Cursor</h3>
+                <span class="mini-badge">Local STDIO</span>
+              </div>
+              <p>
+                Build the server, register the compiled entrypoint, and start in mock mode first.
+                Keep logs on `stderr`, not `stdout`, so MCP traffic stays clean.
+              </p>
+              <div class="snippet-panel compact" aria-label="Cursor config">
+                <div class="snippet-label">.cursor/mcp.json</div>
+                <pre><code>{
+  "mcpServers": {
+    "shelby": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/absolute/path/to/shelby-mcp/dist/apps/server-stdio/src/index.js"],
+      "env": {
+        "SHELBY_PROVIDER": "mock",
+        "SHELBY_WORKDIR": "/absolute/path/to/project/.shelby-workdir",
+        "ALLOW_DESTRUCTIVE_TOOLS": "false"
+      }
+    }
+  }
+}</code></pre>
+              </div>
+            </article>
+
+            <article class="panel client-card">
+              <div class="client-head">
+                <h3>VS Code</h3>
+                <span class="mini-badge">`mcp.json`</span>
+              </div>
+              <p>
+                Point `.vscode/mcp.json` at the built server and keep the sandbox root inside the
+                workspace folder for predictable local behavior.
+              </p>
+              <div class="snippet-panel compact" aria-label="VS Code config">
+                <div class="snippet-label">.vscode/mcp.json</div>
+                <pre><code>{
+  "servers": {
+    "shelby": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/dist/apps/server-stdio/src/index.js"],
+      "env": {
+        "SHELBY_PROVIDER": "mock",
+        "SHELBY_WORKDIR": "${workspaceFolder}/.shelby-workdir",
+        "ALLOW_DESTRUCTIVE_TOOLS": "false"
+      }
+    }
+  }
+}</code></pre>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="status">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-kicker">Current status</p>
+            <h2>Honest about what is stable today and what still needs work.</h2>
+          </div>
+
+          <div class="status-grid">
+            <article class="panel status-card stable">
+              <h3>Stable now</h3>
+              <ul class="stack-list">
+                <li>Mock provider</li>
+                <li>Local-first STDIO flow</li>
+                <li>Sandbox and path guard</li>
+                <li>Tool, resource, and prompt structure</li>
+              </ul>
+            </article>
+
+            <article class="panel status-card experimental">
+              <h3>Experimental</h3>
+              <ul class="stack-list">
+                <li>Real provider maturity</li>
+                <li>Live Shelby validation depth</li>
+                <li>Real-provider streaming boundary</li>
+                <li>Longer-path production hardening</li>
+              </ul>
+            </article>
+
+            <article class="panel status-card future">
+              <h3>Future work</h3>
+              <ul class="stack-list">
+                <li>HTTP transport</li>
+                <li>Dashboard</li>
+                <li>Auth / session model</li>
+                <li>Richer media workflows</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="updates">
+        <div class="container">
+          <div class="section-heading">
+            <p class="section-kicker">Latest updates</p>
+            <h2>Recent repository improvements.</h2>
+          </div>
+
+          <div class="updates-list">
+            <article class="update-item">
+              <span class="update-tag">Onboarding</span>
+              <h3>README and quick-start flow tightened</h3>
+              <p>
+                Cross-platform commands, clearer editor setup, and a more reviewer-friendly project
+                narrative.
+              </p>
+            </article>
+            <article class="update-item">
+              <span class="update-tag">Editors</span>
+              <h3>Cursor and VS Code setup examples added</h3>
+              <p>
+                STDIO MCP registration is documented with realistic config snippets for both
+                clients.
+              </p>
+            </article>
+            <article class="update-item">
+              <span class="update-tag">Security</span>
+              <h3>MCP logging path redaction tightened</h3>
+              <p>
+                Client-visible log notifications now redact absolute local paths instead of
+                forwarding them verbatim.
+              </p>
+            </article>
+            <article class="update-item">
+              <span class="update-tag">Providers</span>
+              <h3>Real-provider smoke harness added</h3>
+              <p>
+                CI-safe adapter validation now exists, with an opt-in live Shelby probe for deeper
+                testing.
+              </p>
+            </article>
+            <article class="update-item">
+              <span class="update-tag">Policy</span>
+              <h3>Streaming upload, strict metadata, and telemetry support</h3>
+              <p>
+                Enterprise-minded controls are built into the current local-first MVP rather than
+                left for later.
+              </p>
+            </article>
+            <article class="update-item">
+              <span class="update-tag">Release</span>
+              <h3>Publish-ready experimental release posture</h3>
+              <p>
+                The repo is positioned for public review without overstating real-provider maturity.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <a class="brand footer-brand" href="#top">shelby-mcp</a>
+          <p class="footer-note">Experimental Shelby-adjacent developer tool.</p>
+        </div>
+
+        <div class="footer-links">
+          <a href="https://github.com/okwn/shelby-mcp" target="_blank" rel="noreferrer"
+            >GitHub repository</a
+          >
+          <a href="https://shelby-mcp.okwn.cc" target="_blank" rel="noreferrer"
+            >shelby-mcp.okwn.cc</a
+          >
+        </div>
+
+        <p class="footer-meta">Local-first MCP server for Shelby, designed for AI agents.</p>
+      </div>
+    </footer>
+  </body>
+</html>

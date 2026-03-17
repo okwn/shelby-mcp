@@ -10,10 +10,12 @@
 
 `shelby-mcp` is a backend/tooling-first repository, not a dashboard-first app. It gives MCP-compatible clients a serious Shelby integration surface with a strict filesystem sandbox, a fully working mock provider, an honest real-provider path, and an architecture that is ready to grow into HTTP transport, auth, media, and multi-user features later.
 
+The MCP server, packages, docs, and tests live in the main repository structure. The static project website for [shelby-mcp.okwn.cc](https://shelby-mcp.okwn.cc) now lives in [`web-app/`](web-app/README.md) and can be deployed independently as a lightweight landing page for the repository.
+
 > **Publish status**
 >
 > Ready to publish publicly as an experimental repository.
-> Mock mode is mature and validated. Real provider mode is credible and implemented against the official Shelby SDK, but it is still experimental and not yet production-mature.
+> Mock mode is mature and validated. Real provider mode is credible and implemented against the official Shelby SDK, but it is still experimental and not yet production-mature. CI is prepared for both Ubuntu and Windows, and the repo now includes an explicit real-provider smoke harness.
 
 ## Quick Start
 
@@ -39,6 +41,27 @@ First things to inspect from your MCP client:
 - `shelby_get_upload_policy`
 - `shelby://system/capabilities`
 - `shelby://system/sandbox`
+
+These commands are intentionally script-driven and cross-platform. The same `npm run ...` flow works in PowerShell, `cmd.exe`, Bash, Zsh, and most general Node.js environments.
+
+## Repository Layout
+
+This repository has two clear responsibilities:
+
+- **Main project root:** the MCP server, shared packages, docs, tests, and CI configuration
+- **`web-app/`:** the static landing page for [shelby-mcp.okwn.cc](https://shelby-mcp.okwn.cc)
+
+The root repository remains the backend/tooling project. The website folder exists to provide a fast project overview, quick-start reference, update log, and an external sharing surface before or alongside formal Shelby ecosystem review.
+
+## Project Website
+
+The public-facing landing page lives in [`web-app/`](web-app/README.md).
+
+- **Deploy target:** [shelby-mcp.okwn.cc](https://shelby-mcp.okwn.cc)
+- **Purpose:** lightweight project website for the GitHub repository
+- **Deployment model:** independent static deployment, separate from the MCP server runtime
+
+Moving the website into `web-app/` keeps the repository root focused on the actual MCP server, provider layer, sandbox model, and developer tooling.
 
 ## What This Is
 
@@ -171,6 +194,11 @@ packages/
     src/telemetry/
     src/utils/
     src/validation/
+
+web-app/
+  index.html
+  styles.css
+  README.md
 ```
 
 Important entrypoints:
@@ -182,12 +210,14 @@ Important entrypoints:
 - [packages/shelby-service/src/sandbox/sandbox-service.ts](packages/shelby-service/src/sandbox/sandbox-service.ts)
 - [packages/shelby-service/src/provider/mock-provider.ts](packages/shelby-service/src/provider/mock-provider.ts)
 - [packages/shelby-service/src/provider/real-provider.ts](packages/shelby-service/src/provider/real-provider.ts)
+- [web-app/index.html](web-app/index.html)
+- [web-app/styles.css](web-app/styles.css)
 
 More detail: [docs/architecture.md](docs/architecture.md)
 
 ## Security And Sandbox Highlights
 
-This repository is not secure because it is “local.” It is secure because the implementation treats filesystem access as a first-class boundary.
+This repository is not secure because it is "local." It is secure because the implementation treats filesystem access as a first-class boundary.
 
 Security properties in the current implementation:
 
@@ -250,7 +280,7 @@ What is still experimental:
 
 - streaming uploads are accepted through the provider interface, but the current SDK adapter still buffers before submission
 - batch upload failure reporting is less granular than the mock provider path
-- no live-network integration tests run in CI yet
+- live network validation is opt-in through a smoke harness rather than running in normal CI
 
 ## Quick Start In More Detail
 
@@ -283,30 +313,53 @@ npm run start
 
 Copy `.env.example` to `.env` or let `npm run setup` create `.env` for you.
 
-| Variable                         | Default                  | Purpose                                             |
-| -------------------------------- | ------------------------ | --------------------------------------------------- |
-| `SHELBY_PROVIDER`                | `mock`                   | provider mode: `mock` or `real`                     |
-| `SHELBY_WORKDIR`                 | `.shelby-workdir`        | sandbox root                                        |
-| `SHELBY_STORAGE_DIR`             | `.shelby-system/storage` | internal storage path inside the sandbox root       |
-| `TEMP_DIR`                       | `.shelby-system/tmp`     | internal temp/download path inside the sandbox root |
-| `MAX_UPLOAD_SIZE_MB`             | `50`                     | upload size guardrail                               |
-| `MAX_READ_TEXT_BYTES`            | `65536`                  | text-read truncation limit                          |
-| `STREAM_UPLOAD_CHUNK_SIZE_BYTES` | `262144`                 | chunk size for stream-aware uploads                 |
-| `SHELBY_STRICT_METADATA`         | `false`                  | enable strict upload metadata enforcement           |
-| `SHELBY_REQUIRED_METADATA_KEYS`  | empty                    | comma-separated required metadata keys              |
-| `SHELBY_DEFAULT_CONTENT_OWNER`   | empty                    | default metadata in non-strict mode                 |
-| `SHELBY_DEFAULT_CLASSIFICATION`  | empty                    | default metadata in non-strict mode                 |
-| `SHELBY_DEFAULT_SOURCE`          | empty                    | default metadata in non-strict mode                 |
-| `TELEMETRY_ENABLED`              | `false`                  | opt-in anonymous telemetry                          |
-| `TELEMETRY_ENDPOINT`             | empty                    | telemetry destination                               |
-| `TELEMETRY_ENVIRONMENT`          | `development`            | telemetry environment label                         |
-| `TELEMETRY_SAMPLE_RATE`          | `1`                      | telemetry sampling ratio                            |
-| `ALLOW_DESTRUCTIVE_TOOLS`        | `false`                  | gate destructive operations                         |
-| `SHELBY_NETWORK`                 | `local`                  | real-provider network                               |
-| `SHELBY_ACCOUNT_ID`              | `demo-account`           | account context                                     |
-| `SHELBY_API_URL`                 | empty                    | optional Shelby RPC override                        |
-| `SHELBY_API_KEY`                 | empty                    | optional API key                                    |
-| `SHELBY_PRIVATE_KEY`             | empty                    | required for real-provider writes                   |
+| Variable                         | Default                  | Purpose                                                            |
+| -------------------------------- | ------------------------ | ------------------------------------------------------------------ |
+| `SHELBY_PROVIDER`                | `mock`                   | provider mode: `mock` or `real`                                    |
+| `SHELBY_WORKDIR`                 | `.shelby-workdir`        | sandbox root                                                       |
+| `SHELBY_STORAGE_DIR`             | `.shelby-system/storage` | internal storage path inside the sandbox root                      |
+| `TEMP_DIR`                       | `.shelby-system/tmp`     | internal temp/download path inside the sandbox root                |
+| `MAX_UPLOAD_SIZE_MB`             | `50`                     | upload size guardrail                                              |
+| `MAX_READ_TEXT_BYTES`            | `65536`                  | text-read truncation limit                                         |
+| `STREAM_UPLOAD_CHUNK_SIZE_BYTES` | `262144`                 | chunk size for stream-aware uploads                                |
+| `SHELBY_STRICT_METADATA`         | `false`                  | enable strict upload metadata enforcement                          |
+| `SHELBY_REQUIRED_METADATA_KEYS`  | empty                    | comma-separated required metadata keys                             |
+| `SHELBY_DEFAULT_CONTENT_OWNER`   | empty                    | default metadata in non-strict mode                                |
+| `SHELBY_DEFAULT_CLASSIFICATION`  | empty                    | default metadata in non-strict mode                                |
+| `SHELBY_DEFAULT_SOURCE`          | empty                    | default metadata in non-strict mode                                |
+| `TELEMETRY_ENABLED`              | `false`                  | opt-in anonymous telemetry                                         |
+| `TELEMETRY_ENDPOINT`             | empty                    | telemetry destination                                              |
+| `TELEMETRY_ENVIRONMENT`          | `development`            | telemetry environment label                                        |
+| `TELEMETRY_SAMPLE_RATE`          | `1`                      | telemetry sampling ratio                                           |
+| `ALLOW_DESTRUCTIVE_TOOLS`        | `false`                  | gate destructive operations                                        |
+| `SHELBY_NETWORK`                 | `local`                  | real-provider network                                              |
+| `SHELBY_ACCOUNT_ID`              | `demo-account`           | account context                                                    |
+| `SHELBY_API_URL`                 | empty                    | optional Shelby RPC override                                       |
+| `SHELBY_API_KEY`                 | empty                    | optional API key                                                   |
+| `SHELBY_PRIVATE_KEY`             | empty                    | required for real-provider writes                                  |
+| `SHELBY_REAL_SMOKE`              | `false`                  | opt-in live real-provider smoke step for `npm run test:real-smoke` |
+
+## Cross-Platform Notes
+
+The repository is designed so the normal developer flow stays shell-agnostic:
+
+- use `npm run setup`
+- use `npm run dev:mock`
+- use `npm run build`
+- use `npm test`
+
+That avoids fragile inline env assignment in most cases.
+
+When you do need a one-off environment override, the syntax differs by shell:
+
+- Bash / Zsh: `SHELBY_REAL_SMOKE=true npm run test:real-smoke`
+- PowerShell: `$env:SHELBY_REAL_SMOKE='true'; npm run test:real-smoke`
+- `cmd.exe`: `set SHELBY_REAL_SMOKE=true && npm run test:real-smoke`
+
+For MCP client configs:
+
+- use POSIX-style absolute paths on macOS/Linux, for example `/Users/alex/dev/shelby-mcp/...`
+- use escaped Windows paths on Windows, for example `C:\\Users\\alex\\dev\\shelby-mcp\\...`
 
 ## Cursor Integration
 
@@ -353,6 +406,11 @@ Example `.cursor/mcp.json`:
   }
 }
 ```
+
+Path note:
+
+- macOS/Linux example path: `/Users/alex/dev/shelby-mcp/dist/apps/server-stdio/src/index.js`
+- Windows example path: `C:\\Users\\alex\\dev\\shelby-mcp\\dist\\apps\\server-stdio\\src\\index.js`
 
 What to test in Cursor:
 
@@ -468,18 +526,59 @@ More detail: [docs/resources-prompts.md](docs/resources-prompts.md)
 
 ## Developer Scripts
 
-| Script                 | What it does                                         |
-| ---------------------- | ---------------------------------------------------- |
-| `npm run setup`        | prepare `.env` and local directories                 |
-| `npm run dev`          | run the STDIO server directly from TypeScript source |
-| `npm run dev:mock`     | force mock mode and start with local-safe defaults   |
-| `npm run build`        | compile to `dist/`                                   |
-| `npm run start`        | run the compiled STDIO server                        |
-| `npm test`             | run the Vitest suite                                 |
-| `npm run lint`         | run ESLint                                           |
-| `npm run typecheck`    | run TypeScript without emit                          |
-| `npm run format:check` | verify Prettier formatting                           |
-| `npm run check`        | format check, lint, typecheck, test, and build       |
+| Script                    | What it does                                         |
+| ------------------------- | ---------------------------------------------------- |
+| `npm run setup`           | prepare `.env` and local directories                 |
+| `npm run dev`             | run the STDIO server directly from TypeScript source |
+| `npm run dev:mock`        | force mock mode and start with local-safe defaults   |
+| `npm run build`           | compile to `dist/`                                   |
+| `npm run start`           | run the compiled STDIO server                        |
+| `npm test`                | run the Vitest suite                                 |
+| `npm run test:real-smoke` | run the real-provider smoke harness                  |
+| `npm run lint`            | run ESLint                                           |
+| `npm run typecheck`       | run TypeScript without emit                          |
+| `npm run format:check`    | verify Prettier formatting                           |
+| `npm run check`           | format check, lint, typecheck, test, and build       |
+
+## Real Provider Smoke Test
+
+The repository includes a real-provider smoke harness in [tests/integration/real-provider-smoke.test.ts](tests/integration/real-provider-smoke.test.ts).
+
+What it validates:
+
+- the real provider factory path is active when `SHELBY_PROVIDER=real`
+- capability reporting is honest
+- account info and degraded health reporting work without live credentials
+- a live healthcheck and list probe can be run explicitly against a real Shelby environment
+
+Run the CI-safe smoke harness:
+
+```bash
+npm run test:real-smoke
+```
+
+That always exercises the real adapter path locally, even without network access.
+
+To enable the live smoke step, provide real Shelby env vars and set `SHELBY_REAL_SMOKE=true`.
+
+Minimum env needed for the live probe:
+
+- `SHELBY_NETWORK`
+- `SHELBY_ACCOUNT_ID`
+
+Optional envs:
+
+- `SHELBY_API_URL`
+- `SHELBY_API_KEY`
+- `SHELBY_PRIVATE_KEY`
+
+Recommended cross-platform approach:
+
+- put your real-provider values in `.env`
+- temporarily set `SHELBY_REAL_SMOKE=true`
+- run `npm run test:real-smoke`
+
+Success means the provider can return account info, complete a healthcheck, and perform a minimal `listBlobs` probe. Failure means the real endpoint, account configuration, or credentials are not ready yet.
 
 ## Publish Readiness Checklist
 
@@ -492,11 +591,13 @@ Current public-publish checklist:
 - [x] typecheck passes
 - [x] tests pass
 - [x] build passes
+- [x] CI covers Ubuntu and Windows
 - [x] README reflects the current implementation
 - [x] sandbox model is documented
 - [x] destructive tools are gated
 - [x] Cursor integration example exists
 - [x] VS Code `.vscode/mcp.json` example exists
+- [x] real-provider smoke harness exists
 - [x] known limitations are documented
 - [x] real provider is clearly labeled experimental
 - [ ] live real-provider integration tests run in CI
@@ -504,7 +605,30 @@ Current public-publish checklist:
 
 **Verdict:** ready to publish publicly as an experimental repository with noted limitations.
 
-That is a good fit for a personal GitHub release today. It is **not** the same as “ready for official Shelby upstreaming without caveats.”
+That is a good fit for public review today. It is **not** the same as "ready for official Shelby upstreaming without caveats."
+
+## Upstream Readiness
+
+What is stable enough for official review today:
+
+- local STDIO runtime
+- strict sandbox / safe-path model
+- mock provider and local-first DX
+- tool/resource/prompt surface
+- config, logging, telemetry toggle, and strict metadata mode
+- cross-platform scripts and CI expectations
+
+What remains experimental:
+
+- real-provider write maturity
+- live Shelby validation outside an opt-in smoke run
+- SDK-boundary streaming limitations
+
+What likely still needs Shelby-native validation before a formal upstream merge request:
+
+- broader real-network smoke coverage
+- stronger confidence in real-provider upload behavior over time
+- any Shelby-specific product expectations around signed URLs, auth, or hosted operation modes
 
 ## Current Status And Limitations
 

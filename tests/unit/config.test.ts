@@ -4,7 +4,7 @@ import { ConfigValidationError, loadConfig } from "../../packages/shared/src/ind
 
 describe("loadConfig", () => {
   test("parses defaults and resolves work directories", () => {
-    const cwd = path.join("C:", "workspace", "repo");
+    const cwd = path.posix.join("/workspace", "repo");
     const config = loadConfig(
       {
         SHELBY_PROVIDER: "mock",
@@ -14,16 +14,56 @@ describe("loadConfig", () => {
     );
 
     expect(config.shelbyProvider).toBe("mock");
-    expect(config.shelbyWorkdir).toBe(path.join(cwd, ".shelby-workdir"));
+    expect(config.shelbyWorkdir).toBe(path.posix.join(cwd, ".shelby-workdir"));
     expect(config.shelbyStorageDir).toBe(
-      path.join(cwd, ".shelby-workdir", ".shelby-system", "storage")
+      path.posix.join(cwd, ".shelby-workdir", ".shelby-system", "storage")
     );
-    expect(config.tempDir).toBe(path.join(cwd, ".shelby-workdir", ".shelby-system", "tmp"));
+    expect(config.tempDir).toBe(path.posix.join(cwd, ".shelby-workdir", ".shelby-system", "tmp"));
     expect(config.streamUploadChunkSizeBytes).toBe(256 * 1024);
     expect(config.strictMetadata).toBe(false);
     expect(config.requiredMetadataKeys).toEqual([]);
     expect(config.telemetryEnabled).toBe(false);
     expect(config.allowDestructiveTools).toBe(false);
+  });
+
+  test("preserves Windows-style absolute workdir values on non-Windows hosts", () => {
+    const cwd = path.posix.join("/home", "runner", "work", "shelby-mcp");
+    const workdir = path.win32.normalize("C:/workspace/repo/.shelby-workdir");
+    const config = loadConfig(
+      {
+        SHELBY_PROVIDER: "mock",
+        SHELBY_WORKDIR: workdir,
+        ALLOW_DESTRUCTIVE_TOOLS: "false"
+      },
+      cwd
+    );
+
+    expect(config.shelbyWorkdir).toBe(workdir);
+    expect(config.shelbyStorageDir).toBe(
+      path.win32.normalize("C:/workspace/repo/.shelby-workdir/.shelby-system/storage")
+    );
+    expect(config.tempDir).toBe(
+      path.win32.normalize("C:/workspace/repo/.shelby-workdir/.shelby-system/tmp")
+    );
+  });
+
+  test("resolves relative directories correctly when cwd is Windows-style", () => {
+    const cwd = path.win32.normalize("C:/workspace/repo");
+    const config = loadConfig(
+      {
+        SHELBY_PROVIDER: "mock",
+        ALLOW_DESTRUCTIVE_TOOLS: "false"
+      },
+      cwd
+    );
+
+    expect(config.shelbyWorkdir).toBe(path.win32.normalize("C:/workspace/repo/.shelby-workdir"));
+    expect(config.shelbyStorageDir).toBe(
+      path.win32.normalize("C:/workspace/repo/.shelby-workdir/.shelby-system/storage")
+    );
+    expect(config.tempDir).toBe(
+      path.win32.normalize("C:/workspace/repo/.shelby-workdir/.shelby-system/tmp")
+    );
   });
 
   test("rejects invalid boolean values", () => {
